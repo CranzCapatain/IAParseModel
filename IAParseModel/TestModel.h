@@ -9,75 +9,75 @@
 #import <Foundation/Foundation.h>
 #import "SubModel.h"
 #import <UIKit/UIKit.h>
+#import "TestBaseModel.h"
 
-@interface TestModel : NSObject
+@interface TestModel : TestBaseModel
 
 {
-    __weak id p;
     SubModel *_sub;
-    void(^block)(int d);
+    int _ii;
 }
-///*
-// name = T,value = {CGRect={CGPoint=dd}{CGSize=dd}}
-// name = N,value =
-// name = V,value = _rect
-// */
-//@property (nonatomic, assign) CGRect rect;
-///*
-// name = T,value = ^i
-// name = N,value =
-// name = V,value = _point
-// */
-//@property (nonatomic, assign) int *point;
-//
-///**
-// name = T,value = @"NSString"
-// name = C,value =
-// name = N,value =
-// name = V,value = _name
-// */
-//@property (nonatomic, copy) NSString *name;
-//
-///**
-// name = T,value = i
-// name = V,value = _age
-// */
-//@property (atomic, assign) int age;
-//
-///**
-// name = T,value = @"NSArray"
-// name = W,value =
-// name = N,value =
-// name = V,value = _array
-// */
-//@property (nonatomic, weak) NSArray *array; // SubModel
-//
-//
-///**
-// name = T,value = @"SubModel"
-// name = &,value =
-// name = N,value =
-// name = G,value = myGetModel
-// name = S,value = mySetIAModel:
-// name = V,value = _model
-// */
-//@property (nonatomic, strong, setter=mySetIAModel:,getter=myGetModel) SubModel *model;
-//
-///**
-// name = T,value = @"NSDictionary"
-// name = &,value =
-// name = N,value =
-// name = V,value = _dic
-// */
-//@property (nonatomic, retain, readwrite) NSDictionary *dic;
-//
-///**
-// name = T,value = @"NSNumber"
-// name = R,value =
-// name = N,value =
-// name = V,value = _num
-// */
-//@property (nonatomic, strong, readonly) NSNumber *num;
+/*
+ name = T,value = {CGRect={CGPoint=dd}{CGSize=dd}}
+ name = N,value =
+ name = V,value = _rect
+ */
+@property (nonatomic, assign) CGRect rect;
+/*
+ name = T,value = ^i
+ name = N,value =
+ name = V,value = _point
+ */
+@property (nonatomic, assign) int *point;
+
+/**
+ name = T,value = @"NSString"
+ name = C,value =
+ name = N,value =
+ name = V,value = _name
+ */
+@property (nonatomic, copy) NSString *name;
+
+/**
+ name = T,value = i
+ name = V,value = _age
+ */
+@property (atomic, assign) int age;
+
+/**
+ name = T,value = @"NSArray"
+ name = W,value =
+ name = N,value =
+ name = V,value = _array
+ */
+@property (nonatomic, strong) NSArray *array; // SubModel
+
+
+/**
+ name = T,value = @"SubModel"
+ name = &,value =
+ name = N,value =
+ name = G,value = myGetModel
+ name = S,value = mySetIAModel:
+ name = V,value = _model
+ */
+@property (nonatomic, strong, setter=mySetIAModel:,getter=myGetModel) SubModel *model;
+
+/**
+ name = T,value = @"NSDictionary"
+ name = &,value =
+ name = N,value =
+ name = V,value = _dic
+ */
+@property (nonatomic, retain, readwrite) NSDictionary *dic;
+
+/**
+ name = T,value = @"NSNumber"
+ name = R,value =
+ name = N,value =
+ name = V,value = _num
+ */
+@property (nonatomic, strong, readonly) NSNumber *num;
 
 
 @end

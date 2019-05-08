@@ -11,13 +11,14 @@
 
 @implementation TestModel
 
-- (NSDictionary *)classInModelArrayForKeys {
-    return @{@"subs":[SubModel class]};
++ (NSDictionary *)ia_classInModelArrayForKeys {
+    return @{@"array":[SubModel class]};
+}
+
++ (BOOL)ia_notCacheClass {
+    return YES;
 }
 
 
-- (NSDictionary *)replaceKeysForKeys {
-    return @{@"ID":@"id"};
-}
 
 @end

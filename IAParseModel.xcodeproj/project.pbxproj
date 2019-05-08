@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37280632227D6497006D6D69 /* TestBaseModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 37280631227D6497006D6D69 /* TestBaseModel.m */; };
 		37E980E3212864510021347C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 37E980E2212864510021347C /* AppDelegate.m */; };
 		37E980E6212864510021347C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 37E980E5212864510021347C /* ViewController.m */; };
 		37E980E9212864510021347C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37E980E7212864510021347C /* Main.storyboard */; };
@@ -21,6 +22,8 @@
 
 /* Begin PBXFileReference section */
 		1B05FA2BFEFCDCCAB6D64C25 /* libPods-IAParseModel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IAParseModel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		37280630227D6497006D6D69 /* TestBaseModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestBaseModel.h; sourceTree = "<group>"; };
+		37280631227D6497006D6D69 /* TestBaseModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestBaseModel.m; sourceTree = "<group>"; };
 		37E980DE212864510021347C /* IAParseModel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IAParseModel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37E980E1212864510021347C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		37E980E2212864510021347C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -98,6 +101,8 @@
 				37E980E5212864510021347C /* ViewController.m */,
 				37E9810B212871900021347C /* TestModel.h */,
 				37E9810C212871900021347C /* TestModel.m */,
+				37280630227D6497006D6D69 /* TestBaseModel.h */,
+				37280631227D6497006D6D69 /* TestBaseModel.m */,
 				37E9810E212871C50021347C /* SubModel.h */,
 				37E9810F212871C50021347C /* SubModel.m */,
 				37E980E7212864510021347C /* Main.storyboard */,
@@ -210,6 +215,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				37280632227D6497006D6D69 /* TestBaseModel.m in Sources */,
 				3EF8F93A2271D7F3004BB910 /* NSObject+IAParse.m in Sources */,
 				37E98110212871C50021347C /* SubModel.m in Sources */,
 				37E980E6212864510021347C /* ViewController.m in Sources */,

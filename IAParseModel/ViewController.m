@@ -29,19 +29,21 @@
 //    NSLog(@"%@",json);
     
     
-    [self testParse:TestModel.class];
-    
 }
 
 - (NSDictionary *)getDic {
-    return @{@"name":@"Alter",
-             @"age":@18,
-             @"subs":@[@{@"name":@"model1",
-                        @"subtype":@100
-                        },
-                      @{@"name":@"model2",
-                        @"subtype":@200}],
-             @"id":@"10086"
+    return @{@"n1":@"19",
+             @"testArr":@[@"1",@"2"],
+             @"ii":@10,
+             @"point":@"13",
+             @"name":@"Alter",
+             @"age":@28,
+             @"array":@[@{@"name":@"Jack1",@"subtype":@11},@{@"name":@"Jack2",@"subtype":@12}],// subModel
+             @"model":@{@"name":@"Jack",@"subtype":@1},
+             @"dic":@{@"key":@"value"},
+             @"num":@100000,
+             @"ID":@"10086",
+             @"sub":@{@"name":@"9.Ca",@"subtype":@100}
              };
 }
 
@@ -62,4 +64,14 @@
 //    return model;
 //}
 
+- (IBAction)actionForDo:(id)sender {
+    
+//    TestModel *test = [[TestModel alloc] init];
+//    [test ia_parseForm:[self getDic]];
+    TestModel *test = [TestModel ia_parseFrom:[self getDic]];
+    NSLog(@"%@",test);
+    id str = [test ia_parseToJSONModel];
+    NSLog(@"%@",str);
+    
+}
 @end
