@@ -15,14 +15,22 @@
 
 {
     SubModel *_sub;
-    int _ii;
+//    int _ii;
 }
+
 /*
  name = T,value = {CGRect={CGPoint=dd}{CGSize=dd}}
  name = N,value =
  name = V,value = _rect
  */
 @property (nonatomic, assign) CGRect rect;
+//@property (nonatomic, assign) CGPoint p;
+//@property (nonatomic, assign) CGSize size;
+//@property (nonatomic, assign) UIOffset offset;
+//@property (nonatomic, assign) UIEdgeInsets edges;
+//@property (nonatomic, assign) CGAffineTransform a;
+//@property (nonatomic, assign) CGVector v;
+
 /*
  name = T,value = ^i
  name = N,value =
@@ -36,13 +44,13 @@
  name = N,value =
  name = V,value = _name
  */
-@property (nonatomic, copy) NSString *name;
+//@property (nonatomic, copy) NSString *name;
 
 /**
  name = T,value = i
  name = V,value = _age
  */
-@property (atomic, assign) int age;
+//@property (atomic, assign) int age;
 
 /**
  name = T,value = @"NSArray"
@@ -77,7 +85,7 @@
  name = N,value =
  name = V,value = _num
  */
-@property (nonatomic, strong, readonly) NSNumber *num;
+//@property (nonatomic, strong, readonly) NSNumber *num;
 
 
 @end

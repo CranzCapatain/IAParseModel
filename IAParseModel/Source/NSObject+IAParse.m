@@ -8,6 +8,7 @@
 
 #import "NSObject+IAParse.h"
 #import <objc/runtime.h>
+#import <UIKit/UIKit.h>
 
 #define kOPEN_PARSE_LOG 1
 
@@ -124,6 +125,35 @@ static bool p_isCustomClass(Class cls) {
     return true;
 }
 
+static NSDictionary *cocoaStructMap = nil;
+static NSString * p_isCocoaStruct(const char *s) {
+    cocoaStructMap = @{@"{CGSize=ff}":@"CGSize",
+                       @"{CGPoint=ff}":@"CGPoint",
+                       @"{CGRect={CGPoint=ff}{CGSize=ff}}":@"CGRect",
+                       @"{UIEdgeInsets=ffff}":@"UIEdgeInsets",
+                       @"{UIOffset=ff}":@"UIOffset",
+                       @"{CGAffineTransform=ffffff}":@"CGAffineTransform",
+                       @"{CGVector=ff}":@"CGVector",
+                       // 64 bit
+                       @"{CGSize=dd}":@"CGSize",
+                       @"{CGPoint=dd}":@"CGPoint",
+                       @"{CGRect={CGPoint=dd}{CGSize=dd}}":@"CGRect",
+                       @"{CGAffineTransform=dddddd}":@"CGAffineTransform",
+                       @"{UIEdgeInsets=dddd}":@"UIEdgeInsets",
+                       @"{UIOffset=dd}":@"UIOffset",
+                       @"{CGVector=dd}":@"CGVector",
+                       
+                       @"{CGRect=\"origin\"{CGPoint=\"x\"d\"y\"d}\"size\"{CGSize=\"width\"d\"height\"d}}":@"CGRect",
+                       @"{CGPoint=\"x\"d\"y\"d}":@"CGPoint",
+                       @"{CGSize=\"width\"d\"height\"d}":@"CGSize",
+                       @"{UIOffset=\"horizontal\"d\"vertical\"d}":@"UIOffset",
+                       @"{UIEdgeInsets=\"top\"d\"left\"d\"bottom\"d\"right\"d}":@"UIEdgeInsets",
+                       @"{CGAffineTransform=\"a\"d\"b\"d\"c\"d\"d\"d\"tx\"d\"ty\"d}":@"CGAffineTransform",
+                       @"{CGVector=\"dx\"d\"dy\"d}":@"CGVector"
+                       };
+    NSString *v = cocoaStructMap[[NSString stringWithUTF8String:s]];
+    return v;
+}
 
 #pragma mark - Property Info
 
@@ -139,6 +169,7 @@ static bool p_isCustomClass(Class cls) {
     bool _isTypeSet;
     kPropertyTypeEncodings _propertyEncodingTypes;
     const char *_ivarName; // ivar name like: @property int age; _ivarName = "_age";
+    NSString * _Nullable _CocoaStructObjcType;
 }
 
 - (instancetype)initWithProperty_t:(const objc_property_t)p;
@@ -156,6 +187,9 @@ kTypeEncodings p_parseTypeEncoding(Class *cls, const char *value) {
             break;
         case 's':
             type = kTypeEncodingsShort;
+            break;
+        case 'i':
+            type = kTypeEncodingsInt;
             break;
         case 'l':
             type = kTypeEncodingsLong;
@@ -259,6 +293,9 @@ kTypeEncodings p_parseTypeEncoding(Class *cls, const char *value) {
                     _isCustomCls = p_isCustomClass(_objectCls);
                     _isTypeArray = (_objectCls == [NSArray class] || _objectCls == [NSMutableArray class]);
                     _isTypeSet = (_objectCls == [NSSet class] || _objectCls == [NSMutableSet class]);
+                    if (_encodingType == kTypeEncodingsStruct) {
+                        _CocoaStructObjcType = p_isCocoaStruct(value);
+                    }
                 }
                     break;
                 case 'V':
@@ -298,6 +335,7 @@ kTypeEncodings p_parseTypeEncoding(Class *cls, const char *value) {
                     break;
             }
         }
+        free(attribute_t);
     }
     return self;
 }
@@ -318,6 +356,7 @@ kTypeEncodings p_parseTypeEncoding(Class *cls, const char *value) {
     bool _isTypeArray;
     bool _isTypeSet;
     __nullable id _value; // 成员变量的值
+    NSString * _Nullable _CocoaStructObjcType;
 }
 
 - (instancetype)initWithIvar:(Ivar)ivar;
@@ -335,6 +374,9 @@ kTypeEncodings p_parseTypeEncoding(Class *cls, const char *value) {
         _isCustomCls = p_isCustomClass(_objectCls);
         _isTypeArray = (_objectCls == [NSArray class] || _objectCls == [NSMutableArray class]);
         _isTypeSet = (_objectCls == [NSSet class] || _objectCls == [NSMutableSet class]);
+        if (_encodingType == kTypeEncodingsStruct) {
+            _CocoaStructObjcType = p_isCocoaStruct(ivar_getTypeEncoding(ivar));
+        }
     }
     return self;
 }
@@ -350,6 +392,7 @@ NSArray * p_parseClassInfo_propertys(Class cls) {
         IAPropertyInfo *p_info = [[IAPropertyInfo alloc] initWithProperty_t:p];
         [propertys addObject:p_info];
     }
+    free(property_t);
     return propertys.copy;
 }
 
@@ -362,6 +405,7 @@ NSArray * p_parseClassInfo_ivars(Class cls) {
         IAIvarInfo *ivar = [[IAIvarInfo alloc] initWithIvar:ivar_t];
         [ivars addObject:ivar];
     }
+    free(ivar);
     return ivars.copy;
 }
 
@@ -688,7 +732,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
             [((NSDictionary *)target) enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 jsonDic[key] = [self parseToJSONModelWithObj:obj];
             }];
-            return jsonDic.copy;
+            return jsonDic;
         }
     }
     if ([target isKindOfClass:[NSArray class]]) {
@@ -704,7 +748,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
             [((NSArray *)target) enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                 [jsonArr addObject:[self parseToJSONModelWithObj:obj]];
             }];
-            return jsonArr.copy;
+            return jsonArr;
         }
     }
     if ([target isKindOfClass:[NSSet class]]) {
@@ -720,7 +764,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
             [((NSSet *)target) enumerateObjectsUsingBlock:^(id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [jsonArr addObject:[self parseToJSONModelWithObj:obj]];
             }];
-            return jsonArr.copy;
+            return jsonArr;
         }
     }
     
@@ -752,6 +796,13 @@ static bool p_isEqual(const char *str1, const char *str2) {
             }
             for (IAIvarInfo *ivarInfo in clsInfo->_ivars) {
                 NSString *key = ivarInfo->_pname ? [NSString stringWithUTF8String:ivarInfo->_pname] : [NSString stringWithUTF8String:ivarInfo->_name];
+                if (!key) {// 容错h处理
+                    if (ivarInfo->_pname) {
+                        ivarInfo->_name++;
+                    }
+                    key = [NSString stringWithUTF8String:ivarInfo->_name];
+                    if (!key) continue;
+                };
                 switch (ivarInfo->_encodingType) {
                     case kTypeEncodingsChar: {
                         char val = ((char (*)(id, Ivar))object_getIvar)(target, ivarInfo->_ivar);
@@ -829,7 +880,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
                     }
                     case kTypeEncodingsObject: {
                         id value = object_getIvar(target, ivarInfo->_ivar);
-                        [jsonDic setObject:[self parseToJSONStringWithObj:value] forKey:key];
+                        [jsonDic setObject:[self parseToJSONModelWithObj:value] forKey:key];
                         break;
                     }
                     case kTypeEncodingsClass: {
@@ -842,13 +893,56 @@ static bool p_isEqual(const char *str1, const char *str2) {
                         [jsonDic setObject:NSStringFromSelector(val) forKey:key];
                         break;
                     }
+                    case kTypeEncodingsStruct: {
+                        if (ivarInfo->_CocoaStructObjcType != nil) {
+                            NSString *value = nil;
+                            if ([ivarInfo->_CocoaStructObjcType isEqualToString:@"CGSize"]) {
+                                value = NSStringFromCGSize([[target valueForKey:key] CGSizeValue]);
+                            } else if ([ivarInfo->_CocoaStructObjcType isEqualToString:@"CGPoint"]) {
+                                value = NSStringFromCGPoint([[target valueForKey:key] CGPointValue]);
+                            } else if ([ivarInfo->_CocoaStructObjcType isEqualToString:@"CGRect"]) {
+                                value = NSStringFromCGRect([[target valueForKey:key] CGRectValue]);
+                            } else if ([ivarInfo->_CocoaStructObjcType isEqualToString:@"UIEdgeInsets"]) {
+                                value = NSStringFromUIEdgeInsets([[target valueForKey:key] UIEdgeInsetsValue]);
+                            } else if ([ivarInfo->_CocoaStructObjcType isEqualToString:@"CGAffineTransform"]) {
+                                value = NSStringFromCGAffineTransform([[target valueForKey:key] CGAffineTransformValue]);
+                            } else if ([ivarInfo->_CocoaStructObjcType isEqualToString:@"UIOffset"]) {
+                                value = NSStringFromUIOffset([[target valueForKey:key] UIOffsetValue]);
+                            } else if ([ivarInfo->_CocoaStructObjcType isEqualToString:@"CGVector"]) {
+                                value = NSStringFromCGVector([[target valueForKey:key] CGVectorValue]);
+                            }
+                            if (value) {
+                                [jsonDic setObject:value forKey:key];
+                            }
+                        } else {
+                            @try {
+                                id value = [target valueForKey:key];
+                                if (value) {
+                                    [jsonDic setObject:value forKey:key];
+                                }
+                            } @catch (NSException *exception) {
+                                NSLog(@"Error⚠️:try set struct error!%@",exception);
+                            }
+                        }
+                        break;
+                    }
+                    case kTypeEncodingsPointType: {
+//                        int * val = ((int * (*)(id, Ivar))object_getIvar)(target, ivarInfo->_ivar);
+//
+//                        NSLog(@"%d",*valv;
+//                        break;
+                    }
                     default:
                         break;
                 }
             }
             superCls = clsInfo->_superCls;
+            if (superCls == [NSObject class]
+                || superCls == [NSProxy class]) {
+                superCls = nil;
+            }
         } while ([cls ia_autoParseSuper] && superCls);
-        return [self parseToJSONModelWithObj:jsonDic.copy];
+        return [self parseToJSONModelWithObj:jsonDic];
     }
     return nil;
 }

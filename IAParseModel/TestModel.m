@@ -16,9 +16,11 @@
 }
 
 + (BOOL)ia_notCacheClass {
-    return YES;
+    return NO;
 }
 
-
++ (BOOL)ia_autoParseSuper {
+    return NO;
+}
 
 @end
