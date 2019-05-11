@@ -74,20 +74,21 @@
     test.rect = CGRectMake(20, 30, 80, 80);
     int p = 20;
     test.point = &p;
+    test.date =[NSDate date];
     
+//    id str = [test ia_parseToJSONModel];
+//    NSLog(@"%@",str);
     
     CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
     for (int i = 0; i < 10000; i++) {
-        [test ia_parseToJSONModel];
-//        NSLog(@"str-%@",str);
+       id str = [test ia_parseToJSONModel];
     }
     CFAbsoluteTime end = CFAbsoluteTimeGetCurrent();
     NSLog(@"=========1:%f", end - start);
     
     CFAbsoluteTime start1 = CFAbsoluteTimeGetCurrent();
     for (int i = 0; i < 10000; i++) {
-        [test yy_modelToJSONObject];
-//        NSLog(@"str1-%@",str1);
+        id str1 =[test yy_modelToJSONObject];
     }
     CFAbsoluteTime end1 = CFAbsoluteTimeGetCurrent();
     NSLog(@"=========2:%f", end1 - start1);

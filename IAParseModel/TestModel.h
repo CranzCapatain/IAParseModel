@@ -87,5 +87,5 @@
  */
 //@property (nonatomic, strong, readonly) NSNumber *num;
 
-
+@property (nonatomic, strong) NSDate *date;
 @end

@@ -453,6 +453,8 @@ NSArray * p_parseClassInfo_ivars(Class cls) {
 
 @property (nonatomic, strong, readonly) dispatch_semaphore_t syncSign;
 
+@property (nonatomic, strong, readonly) NSDateFormatter *dateFormatter;
+
 
 /**
  Set value to one from 'from'.
@@ -497,6 +499,8 @@ static bool p_isEqual(const char *str1, const char *str2) {
         instance = [[self alloc] init];
         instance->_clsMapCache = [NSMutableDictionary dictionary];
         instance->_syncSign = dispatch_semaphore_create(1);
+        instance->_dateFormatter = [[NSDateFormatter alloc] init];
+        instance->_dateFormatter.dateFormat = @"yyyy.MM.dd HH:mm:ss";
         
         extern NSNotificationName const UIApplicationDidReceiveMemoryWarningNotification;
         [[NSNotificationCenter defaultCenter] addObserver:instance selector:@selector(didAppReceiveMemoryWarning:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
@@ -723,6 +727,9 @@ static bool p_isEqual(const char *str1, const char *str2) {
     }
     if ([target isKindOfClass:[NSData class]]) {
         return [[NSString alloc] initWithData:target encoding:NSUTF8StringEncoding];
+    }
+    if ([target isKindOfClass:[NSDate class]]) {
+        return [self.dateFormatter stringFromDate:target];
     }
     if ([target isKindOfClass:[NSDictionary class]]) {
         if ([NSJSONSerialization isValidJSONObject:target]) {
