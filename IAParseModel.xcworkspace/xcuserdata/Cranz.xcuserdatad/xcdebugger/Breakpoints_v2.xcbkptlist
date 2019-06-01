@@ -13,5 +13,53 @@
             stopOnStyle = "0">
          </BreakpointContent>
       </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "IAParseModel/Source/NSObject+IAParse.m"
+            timestampString = "579714276.436087"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "821"
+            endingLineNumber = "821"
+            landmarkName = "-parseToJSONModelWithObj:"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[IAParseMachine parseToJSONModelWithObj:]"
+                  moduleName = "IAParseModel"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/Cranz/Desktop/IAParseModel-master/IAParseModel/Source/NSObject+IAParse.m"
+                  timestampString = "579714276.4417059"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "822"
+                  endingLineNumber = "822"
+                  offsetFromSymbolStart = "3010">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[IAParseMachine parseToJSONModelWithObj:]"
+                  moduleName = "IAParseModel"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/Cranz/Desktop/IAParseModel-master/IAParseModel/Source/NSObject+IAParse.m"
+                  timestampString = "579714276.444281"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "822"
+                  endingLineNumber = "822"
+                  offsetFromSymbolStart = "3018">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
    </Breakpoints>
 </Bucket>

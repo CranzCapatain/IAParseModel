@@ -11,10 +11,10 @@
 #import <UIKit/UIKit.h>
 #import "TestBaseModel.h"
 
-@interface TestModel : TestBaseModel
+@interface TestModel : TestBaseModel<NSCoding>
 
 {
-    SubModel *_sub;
+//    SubModel *_sub;
 //    int _ii;
 }
 
@@ -23,7 +23,7 @@
  name = N,value =
  name = V,value = _rect
  */
-@property (nonatomic, assign) CGRect rect;
+//@property (nonatomic, assign) CGRect rect;
 //@property (nonatomic, assign) CGPoint p;
 //@property (nonatomic, assign) CGSize size;
 //@property (nonatomic, assign) UIOffset offset;
@@ -36,21 +36,21 @@
  name = N,value =
  name = V,value = _point
  */
-@property (nonatomic, assign) int *point;
-
+//@property (nonatomic, assign) int *point;
+/**
+ name = T,value = i
+ name = V,value = _age
+ */
+@property (atomic, assign) int age;
 /**
  name = T,value = @"NSString"
  name = C,value =
  name = N,value =
  name = V,value = _name
  */
-//@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *name;
 
-/**
- name = T,value = i
- name = V,value = _age
- */
-//@property (atomic, assign) int age;
+
 
 /**
  name = T,value = @"NSArray"
@@ -69,15 +69,15 @@
  name = S,value = mySetIAModel:
  name = V,value = _model
  */
-@property (nonatomic, strong, setter=mySetIAModel:,getter=myGetModel) SubModel *model;
-
+//@property (nonatomic, strong, setter=mySetIAModel:,getter=myGetModel) SubModel *model;
+//
 /**
  name = T,value = @"NSDictionary"
  name = &,value =
  name = N,value =
  name = V,value = _dic
  */
-@property (nonatomic, retain, readwrite) NSDictionary *dic;
+//@property (nonatomic, retain, readwrite) NSDictionary *dic;
 
 /**
  name = T,value = @"NSNumber"
@@ -87,5 +87,5 @@
  */
 //@property (nonatomic, strong, readonly) NSNumber *num;
 
-@property (nonatomic, strong) NSDate *date;
+//@property (nonatomic, strong) NSDate *date;
 @end

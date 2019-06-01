@@ -8,6 +8,7 @@
 
 #import "TestModel.h"
 #import "NSObject+IAParse.h"
+#import <YYModel.h>
 
 @implementation TestModel
 
@@ -21,6 +22,15 @@
 
 + (BOOL)ia_autoParseSuper {
     return NO;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+    [self ia_encodeWithCoder:aCoder];
+//    [self yy_modelEncodeWithCoder:aCoder];
+}
+- (nullable instancetype)initWithCoder:(NSCoder *)aDecoder {
+    return [self ia_initWithCoder:aDecoder];
+//    return [self yy_modelInitWithCoder:aDecoder];
 }
 
 @end

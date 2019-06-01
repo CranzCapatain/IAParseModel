@@ -19,14 +19,25 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)ia_parseForm:(id)from;
 
-/// Parse model to json model like: NSString, NSArrary, NSDictionary
+/// Parse model to json model like: NSString, NSArrary, NSDictionary.
+/// Parse except C point type,Union,C Array,Bits,nomal Struct.
 - (nullable id)ia_parseToJSONModel;
 
 /// Parse model to json string
 - (nullable NSString *)ia_parseToJSONString;
 
+
+/// NSCoding
+- (void)ia_encodeWithCoder:(NSCoder *)aCoder;
+- (nullable instancetype)ia_initWithCoder:(NSCoder *)aDecoder;
+
+/// description
+- (NSString *)debugIvarsDescription;
+
 @end
 
+
+/// need to override
 @interface NSObject (IAParseExtern)
 
 /// 是否自动解析父类,NSObject,NSProxy基类并不会被解析出来,默认YES

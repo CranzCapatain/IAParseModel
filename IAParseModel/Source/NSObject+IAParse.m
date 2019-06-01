@@ -125,6 +125,23 @@ static bool p_isCustomClass(Class cls) {
     return true;
 }
 
+static bool p_isKindOfCustomClass(id value) {
+    if ([value isKindOfClass:[NSString class]]) {
+        return false;
+    } else if ([value isKindOfClass:[NSArray class]]) {
+        return false;
+    } else if ([value isKindOfClass:[NSDictionary class]]) {
+        return false;
+    } else if ([value isKindOfClass:[NSSet class]]) {
+        return false;
+    } else if ([value isKindOfClass:[NSData class]]) {
+        return false;
+    } else if ([value isKindOfClass:[NSNumber class]]) {
+        return false;
+    }
+    return true;
+}
+
 static NSDictionary *cocoaStructMap = nil;
 static NSString * p_isCocoaStruct(const char *s) {
     cocoaStructMap = @{@"{CGSize=ff}":@"CGSize",
@@ -236,7 +253,7 @@ kTypeEncodings p_parseTypeEncoding(Class *cls, const char *value) {
                 NSString *classString = [valueString substringWithRange:NSMakeRange(2, strlen(value) - 3)];
                 *cls = NSClassFromString(classString);
             } else {
-                NSLog(@"Error⚠️:The type encoding parse error with value:%s",value);
+                NSLog(@"=ia Error⚠️:The type encoding parse error with value:%s",value);
             }
         }
             break;
@@ -436,7 +453,8 @@ NSArray * p_parseClassInfo_ivars(Class cls) {
         }
         _ivars = p_parseClassInfo_ivars(cls);
         for (IAIvarInfo *ivar in _ivars) {
-            ivar->_pname = [nameMap[[NSString stringWithUTF8String:ivar->_name]] UTF8String];
+            const char *pname = [nameMap[[NSString stringWithUTF8String:ivar->_name]] UTF8String];
+            ivar->_pname = pname;
         }
     }
     return self;
@@ -463,6 +481,14 @@ NSArray * p_parseClassInfo_ivars(Class cls) {
  @param one That one needs to be set values.
  */
 - (void)parse:(id)from toTempOne:(id)one;
+
+- (id)parseToJSONModelWithObj:(id)target;
+
+- (NSString *)parseToJSONStringWithObj:(id)target;
+
+- (void)parseEncodeWithCoder:(NSCoder *)aCoder target:(id)target;
+
+- (void)initWithCoder:(NSCoder *)aDecoder target:(id)target;
 
 @end
 
@@ -528,9 +554,9 @@ static bool p_isEqual(const char *str1, const char *str2) {
         if ([parseOne isKindOfClass:[NSDictionary class]]) {
             return parseOne;
         }
-        NSLog(@"Error-⚠️:The 'from' is kind of NSData, but the parseOne must be NSDictionary.");
+        NSLog(@"=ia Error-⚠️:The 'from' is kind of NSData, but the parseOne must be NSDictionary.");
     }
-    NSLog(@"Error-⚠️:Can't parse 'from', you have to check the type is NSDictionary or NSString or NSData?");
+    NSLog(@"=ia Error-⚠️:Can't parse 'from', you have to check the type is NSDictionary or NSString or NSData?");
     return nil;
 }
 
@@ -617,7 +643,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
                 [one setValue:array.copy forKey:setKey];
                 return YES;
             } else {
-                NSLog(@"Error⚠️:The key %@ not 'Array' type in source dic:%@",setKey,dic);
+                NSLog(@"=ia Error⚠️:The key %@ not 'Array' type in source dic:%@",setKey,dic);
                 return YES;
             }
         } else if (ivar->_isTypeSet == true) {
@@ -638,7 +664,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
                 [one setValue:set.copy forKey:setKey];
                 return YES;
             } else {
-                NSLog(@"Error⚠️:The key %@ not 'Set' type in source dic:%@",setKey,dic);
+                NSLog(@"=ia Error⚠️:The key %@ not 'Set' type in source dic:%@",setKey,dic);
                 return YES;
             }
         } else {
@@ -683,7 +709,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
                 [one setValue:array.copy forKey:setKey];
                 return YES;
             } else {
-                NSLog(@"Error⚠️:The key %@ not 'Array' type in source dic:%@",setKey,dic);
+                NSLog(@"=ia Error⚠️:The key %@ not 'Array' type in source dic:%@",setKey,dic);
                 return YES;
             }
         } else if (property->_isTypeSet) {
@@ -704,7 +730,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
                 [one setValue:set.copy forKey:setKey];
                 return YES;
             } else {
-                NSLog(@"Error⚠️:The key %@ not 'Set' type in source dic:%@",setKey,dic);
+                NSLog(@"=ia Error⚠️:The key %@ not 'Set' type in source dic:%@",setKey,dic);
                 return YES;
             }
         } else {
@@ -928,16 +954,13 @@ static bool p_isEqual(const char *str1, const char *str2) {
                                     [jsonDic setObject:value forKey:key];
                                 }
                             } @catch (NSException *exception) {
-                                NSLog(@"Error⚠️:try set struct error!%@",exception);
+                                NSLog(@"=ia Error⚠️:try set struct error!%@",exception);
                             }
                         }
                         break;
                     }
                     case kTypeEncodingsPointType: {
-//                        int * val = ((int * (*)(id, Ivar))object_getIvar)(target, ivarInfo->_ivar);
-//
-//                        NSLog(@"%d",*valv;
-//                        break;
+                        // Do in the future...maybe ^_ ^!!!
                     }
                     default:
                         break;
@@ -971,6 +994,291 @@ static bool p_isEqual(const char *str1, const char *str2) {
         return [self parseToJSONStringWithObj:data];
     }
     return nil;
+}
+
+- (void)parseEncodeWithCoder:(NSCoder *)aCoder target:(id)target {
+    Class cls = [target class];
+    IAClassInfo *clsInfo = [IAParseMachine.sharedInstance clsInfoWithCls:cls];
+    if (!clsInfo) {
+        clsInfo = [[IAClassInfo alloc] initWithCls:cls];
+        if (![cls ia_notCacheClass]) {
+            [IAParseMachine.sharedInstance setClassInfo:clsInfo forCls:cls];
+        }
+    }
+    for (IAIvarInfo *ivar in clsInfo->_ivars) {
+        NSString *key = ivar->_pname ? [NSString stringWithUTF8String:ivar->_pname] : [NSString stringWithUTF8String:ivar->_name];
+        if (!key && ivar->_pname) {
+            if (ivar->_pname) {
+                ivar->_name++;
+            }
+            key = [NSString stringWithUTF8String:ivar->_name];
+            if (!key) continue;
+        }
+        switch (ivar->_encodingType) {
+            case kTypeEncodingsChar: {
+                char val = ((char (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInt:(int)val forKey:key];
+                break;
+            }
+            case kTypeEncodingsInt: {
+                int val = ((int (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInt:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsShort: {
+                short val = ((short (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInt:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsLong: {
+                long val = ((long (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInteger:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsLongLong: {
+                long long val = ((long long (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInteger:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsUnsignedChar: {
+                unsigned char val = ((unsigned char (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInt:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsUnsignedInt: {
+                unsigned int val = ((unsigned int (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInt:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsUnsignedShort: {
+                unsigned short val = ((unsigned short (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInt:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsUnsignedLong: {
+                unsigned long val = ((unsigned long (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInteger:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsUnsignedLongLong: {
+                unsigned long long val = ((unsigned long long (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeInteger:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsFloat: {
+                float val = ((float (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeFloat:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsDouble: {
+                double val = ((double (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeDouble:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsC99Bool: {
+                bool val = ((bool (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeBool:val forKey:key];
+                break;
+            }
+            case kTypeEncodingsVoid: {
+                [aCoder encodeObject:[NSNull new] forKey:key];
+                break;
+            }
+            case kTypeEncodingsCString: {
+                char * val = ((char * (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeObject:[NSString stringWithUTF8String:val] forKey:key];
+                break;
+            }
+            case kTypeEncodingsObject: {
+                id value = object_getIvar(target, ivar->_ivar);
+                if (!p_isKindOfCustomClass(value)) {
+                    if ([value isKindOfClass:[NSArray class]]
+                        && ![((NSArray *)value).firstObject respondsToSelector:@selector(encodeWithCoder:)]) {
+                            break;
+                    } else if ([value isKindOfClass:[NSSet class]] && ![((NSSet *)value).anyObject respondsToSelector:@selector(encodeWithCoder:)]) {
+                        break;
+                    } else if ([value isKindOfClass:[NSDictionary class]] && ![NSJSONSerialization isValidJSONObject:value]) {
+                        break;
+                    } else if ([value respondsToSelector:@selector(encodeWithCoder:)]) {
+                        [aCoder encodeObject:value forKey:key];
+                    }
+                } else if ([value respondsToSelector:@selector(encodeWithCoder:)]) {
+                    [aCoder encodeObject:value forKey:key];
+                }
+                break;
+            }
+            case kTypeEncodingsClass: {
+                Class val = ((Class (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeObject:NSStringFromClass(val) forKey:key];
+                break;
+            }
+            case kTypeEncodingsSEL: {
+                SEL val = ((SEL (*)(id, Ivar))object_getIvar)(target, ivar->_ivar);
+                [aCoder encodeObject:NSStringFromSelector(val) forKey:key];
+                break;
+            }
+            case kTypeEncodingsStruct: {
+                if (ivar->_CocoaStructObjcType != nil) {
+                    if ([ivar->_CocoaStructObjcType isEqualToString:@"CGSize"]) {
+                        [aCoder encodeCGSize:[[target valueForKey:key] CGSizeValue] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGPoint"]) {
+                        [aCoder encodeCGPoint:[[target valueForKey:key] CGPointValue] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGRect"]) {
+                        [aCoder encodeCGRect:[[target valueForKey:key] CGRectValue] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"UIEdgeInsets"]) {
+                        [aCoder encodeUIEdgeInsets:[[target valueForKey:key] UIEdgeInsetsValue] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGAffineTransform"]) {
+                        [aCoder encodeCGAffineTransform:[[target valueForKey:key] CGAffineTransformValue] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"UIOffset"]) {
+                        [aCoder encodeUIOffset:[[target valueForKey:key] UIOffsetValue] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGVector"]) {
+                        [aCoder encodeCGVector:[[target valueForKey:key] CGVectorValue] forKey:key];
+                    }
+                } else {
+                    @try {
+                        id value = [target valueForKey:key];
+                        [aCoder encodeObject:value forKey:key];
+                    } @catch (NSException *exception) {
+                        NSLog(@"=ia Error⚠️:try encodeObject for struct error!%@",exception);
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}
+
+- (void)initWithCoder:(NSCoder *)aDecoder target:(id)target {
+    Class cls = [target class];
+    IAClassInfo *clsInfo = [IAParseMachine.sharedInstance clsInfoWithCls:cls];
+    if (!clsInfo) {
+        clsInfo = [[IAClassInfo alloc] initWithCls:cls];
+        if (![cls ia_notCacheClass]) {
+            [IAParseMachine.sharedInstance setClassInfo:clsInfo forCls:cls];
+        }
+    }
+    for (IAIvarInfo *ivar in clsInfo->_ivars) {
+        NSString *key = ivar->_pname ? [NSString stringWithUTF8String:ivar->_pname] : [NSString stringWithUTF8String:ivar->_name];
+        if (!key && ivar->_pname) {
+            if (ivar->_pname) {
+                ivar->_name++;
+            }
+            key = [NSString stringWithUTF8String:ivar->_name];
+            if (!key) continue;
+        }
+        switch (ivar->_encodingType) {
+            case kTypeEncodingsChar: {
+                ((void (*) (id, Ivar, char))object_setIvar)(target, ivar->_ivar, (char)[aDecoder decodeIntForKey:key]);
+                break;
+            }
+            case kTypeEncodingsInt: {
+                ((void (*) (id, Ivar, int))object_setIvar)(target, ivar->_ivar, [aDecoder decodeIntForKey:key]);
+                break;
+            }
+            case kTypeEncodingsShort: {
+                ((void (*) (id, Ivar, short))object_setIvar)(target, ivar->_ivar, (short)[aDecoder decodeIntForKey:key]);
+                break;
+            }
+            case kTypeEncodingsLong: {
+                ((void (*) (id, Ivar, long))object_setIvar)(target, ivar->_ivar, (long)[aDecoder decodeIntegerForKey:key]);
+                break;
+            }
+            case kTypeEncodingsLongLong: {
+                ((void (*) (id, Ivar, long long))object_setIvar)(target, ivar->_ivar, (long long)[aDecoder decodeIntegerForKey:key]);
+                break;
+            }
+            case kTypeEncodingsUnsignedChar: {
+                ((void (*) (id, Ivar, unsigned char))object_setIvar)(target, ivar->_ivar, (unsigned char)[aDecoder decodeIntForKey:key]);
+                break;
+            }
+            case kTypeEncodingsUnsignedInt: {
+                ((void (*) (id, Ivar, unsigned int))object_setIvar)(target, ivar->_ivar, (unsigned int)[aDecoder decodeIntForKey:key]);
+                break;
+            }
+            case kTypeEncodingsUnsignedShort: {
+                ((void (*) (id, Ivar, unsigned short))object_setIvar)(target, ivar->_ivar, (unsigned short)[aDecoder decodeIntForKey:key]);
+                break;
+            }
+            case kTypeEncodingsUnsignedLong: {
+                ((void (*) (id, Ivar, unsigned long))object_setIvar)(target, ivar->_ivar, (unsigned long)[aDecoder decodeIntegerForKey:key]);
+                break;
+            }
+            case kTypeEncodingsUnsignedLongLong: {
+                ((void (*) (id, Ivar, long long))object_setIvar)(target, ivar->_ivar, (long long)[aDecoder decodeIntegerForKey:key]);
+                break;
+            }
+            case kTypeEncodingsFloat: {
+                ((void (*) (id, Ivar, float))object_setIvar)(target, ivar->_ivar, [aDecoder decodeFloatForKey:key]);
+                break;
+            }
+            case kTypeEncodingsDouble: {
+                ((void (*) (id, Ivar, double))object_setIvar)(target, ivar->_ivar, [aDecoder decodeDoubleForKey:key]);
+                break;
+            }
+            case kTypeEncodingsC99Bool: {
+                ((void (*) (id, Ivar, bool))object_setIvar)(target, ivar->_ivar, [aDecoder decodeBoolForKey:key]);
+                break;
+            }
+            case kTypeEncodingsVoid: {
+                object_setIvar(target, ivar->_ivar, [aDecoder decodeObjectForKey:key]);
+                break;
+            }
+            case kTypeEncodingsCString: {
+                ((void (*) (id, Ivar, char *)) object_setIvar)(target, ivar->_ivar, (char *)[[aDecoder decodeObjectForKey:key] UTF8String]);
+                break;
+            }
+            case kTypeEncodingsObject: {
+                object_setIvar(target, ivar->_ivar, [aDecoder decodeObjectForKey:key]);
+                break;
+            }
+            case kTypeEncodingsClass: {
+                ((void (*) (id, Ivar, Class)) object_setIvar)(target, ivar->_ivar, NSClassFromString([aDecoder decodeObjectForKey:key]));
+                break;
+            }
+            case kTypeEncodingsSEL: {
+                ((void (*) (id, Ivar, SEL)) object_setIvar)(target, ivar->_ivar, NSSelectorFromString([aDecoder decodeObjectForKey:key]));
+                break;
+            }
+            case kTypeEncodingsStruct: {
+                if (ivar->_CocoaStructObjcType != nil) {
+                    if ([ivar->_CocoaStructObjcType isEqualToString:@"CGSize"]) {
+                        CGSize val = [aDecoder decodeCGSizeForKey:key];
+                        [target setValue:[NSValue valueWithCGSize:val] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGPoint"]) {
+                        CGPoint val = [aDecoder decodeCGPointForKey:key];
+                        [target setValue:[NSValue valueWithCGPoint:val] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGRect"]) {
+                        CGRect val = [aDecoder decodeCGRectForKey:key];
+                        [target setValue:[NSValue valueWithCGRect:val] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"UIEdgeInsets"]) {
+                        UIEdgeInsets val = [aDecoder decodeUIEdgeInsetsForKey:key];
+                        [target setValue:[NSValue valueWithUIEdgeInsets:val] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGAffineTransform"]) {
+                        CGAffineTransform val = [aDecoder decodeCGAffineTransformForKey:key];
+                        [target setValue:[NSValue valueWithCGAffineTransform:val] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"UIOffset"]) {
+                        UIOffset val = [aDecoder decodeUIOffsetForKey:key];
+                        [target setValue:[NSValue valueWithUIOffset:val] forKey:key];
+                    } else if ([ivar->_CocoaStructObjcType isEqualToString:@"CGVector"]) {
+                        CGVector val = [aDecoder decodeCGVectorForKey:key];
+                        [target setValue:[NSValue valueWithCGVector:val] forKey:key];
+                    }
+                } else {
+                    @try {
+                        id value = [aDecoder decodeObjectForKey:key];
+                        object_setIvar(target, ivar->_ivar, value);
+                    } @catch (NSException *exception) {
+                        NSLog(@"=ia Error⚠️:try decodeObject for struct error!%@",exception);
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
 }
 
 #pragma mark cache
@@ -1026,6 +1334,34 @@ static bool p_isEqual(const char *str1, const char *str2) {
     return [[IAParseMachine sharedInstance] parseToJSONModelWithObj:self];
 }
 
+- (void)ia_encodeWithCoder:(NSCoder *)aCoder {
+    [[IAParseMachine sharedInstance] parseEncodeWithCoder:aCoder target:self];
+}
+
+- (instancetype)ia_initWithCoder:(NSCoder *)aDecoder {
+    [[IAParseMachine sharedInstance] initWithCoder:aDecoder target:self];
+    return self;
+}
+
+- (NSString *)debugIvarsDescription {
+#ifdef DEBUG
+    NSMutableString *result = [NSString stringWithFormat:@"\n=ia class<%@>' ivars print begin======\n",self.class].mutableCopy;
+    IAClassInfo *clsInfo = [IAParseMachine.sharedInstance clsInfoWithCls:self.class];
+    for (IAIvarInfo *ivar in clsInfo->_ivars) {
+        NSString *key = [NSString stringWithUTF8String:ivar->_pname ? ivar->_pname:ivar->_name];
+        @try {
+            id value = [self valueForKey:key];
+            [result appendFormat:@"%@:%@\n",key,value];
+        } @catch (NSException *exception) {
+            NSLog(@"=ia Error-%@",exception);
+        }
+    }
+    [result appendString:@"=ia ivars print end======"];
+    return result;
+#endif
+    return nil;
+}
+
 @end
 
 
@@ -1048,7 +1384,7 @@ static bool p_isEqual(const char *str1, const char *str2) {
 }
 
 - (void)setValue:(id)value forUndefinedKey:(NSString *)key {
-    NSLog(@"ia====== <%@> can't parse with key:%@,value:%@, you should check type encoding",self.class,key,value);
+    NSLog(@"=ia <%@> can't parse with key:%@,value:%@, you should check type encoding",self.class,key,value);
 }
 
 @end
